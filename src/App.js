@@ -9,7 +9,6 @@ import styled from "styled-components";
 import reset from "styled-reset";
 import { createGlobalStyle } from "styled-components";
 
-
 const GlobalStyle = createGlobalStyle`
   ${reset}
 
@@ -22,7 +21,7 @@ const GlobalStyle = createGlobalStyle`
 
 const Loading = styled.h1`
   position: fixed;
-  top: -50px;
+  top: -300px;
   left: 0;
   width: 100vw;
   height: 120vh;
@@ -32,7 +31,7 @@ const Loading = styled.h1`
   background-color: #eee;
   color: #999;
   font-size: 50px;
-`
+`;
 
 const StyledApp = styled.div`
   padding: 50px;
@@ -50,11 +49,11 @@ const Header = styled.h1`
 function App() {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(loadFB())
+    dispatch(loadFB());
   }, [dispatch]);
   const data = useSelector((state) => state.words.status);
-  if (data === 'loading') {
-    return <Loading>Loading...</Loading>
+  if (data === "loading") {
+    return <Loading>Loading...</Loading>;
   }
   return (
     <>
