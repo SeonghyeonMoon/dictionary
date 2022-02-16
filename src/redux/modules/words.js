@@ -10,40 +10,68 @@ import {
 import { db } from "../../firebase";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-export const loadFB = createAsyncThunk("words/loadFB", async () => {
-  const dbData = await getDocs(collection(db, "words"));
-  const newWords = [];
-  dbData.forEach((word) => {
-    newWords.push({ id: word.id, ...word.data() });
-  });
-  newWords.sort((a, b) => a.timeStamp > b.timeStamp);
-  return newWords;
+export const loadFB = createAsyncThunk("words/loadFB", async (_, thunkAPI) => {
+  try {
+    const dbData = await getDocs(collection(db, "words"));
+    const newWords = [];
+    dbData.forEach((word) => {
+      newWords.push({ id: word.id, ...word.data() });
+    });
+    newWords.sort((a, b) => a.timeStamp > b.timeStamp);
+    return newWords;
+  } catch (err) {
+    alert(err);
+    return thunkAPI.rejectWithValue(err.response.message);
+  }
 });
 
-export const createFB = createAsyncThunk("words/createFB", async (word) => {
-  const dbRef = await addDoc(collection(db, "words"), word);
-  const _newWord = await getDoc(dbRef);
-  const newWord = { id: _newWord.id, ..._newWord.data() };
-  return newWord;
-});
+export const createFB = createAsyncThunk(
+  "words/createFB",
+  async (word, thunkAPI) => {
+    try {
+      const dbRef = await addDoc(collection(db, "words"), word);
+      const _newWord = await getDoc(dbRef);
+      const newWord = { id: _newWord.id, ..._newWord.data() };
+      return newWord;
+    } catch (err) {
+      alert(err);
+      return thunkAPI.rejectWithValue(err.response.message);
+    }
+  }
+);
 
-export const updateFB = createAsyncThunk("words/updateFB", async (word) => {
-  const dbRef = await doc(db, "words", word.id);
-  await updateDoc(dbRef, word);
-  return word;
-});
+export const updateFB = createAsyncThunk(
+  "words/updateFB",
+  async (word, thunkAPI) => {
+    try {
+      const dbRef = await doc(db, "words", word.id);
+      await updateDoc(dbRef, word);
+      return word;
+    } catch (err) {
+      alert(err);
+      return thunkAPI.rejectWithValue(err.response.message);
+    }
+  }
+);
 
-export const deleteFB = createAsyncThunk("words/deleteFB", async (id) => {
-  const dbRef = await doc(db, "words", id);
-  await deleteDoc(dbRef);
-  return id;
-});
+export const deleteFB = createAsyncThunk(
+  "words/deleteFB",
+  async (id, thunkAPI) => {
+    try {
+      const dbRef = await doc(db, "words", id);
+      await deleteDoc(dbRef);
+      return id;
+    } catch (err) {
+      alert(err);
+      return thunkAPI.rejectWithValue(err.response.message);
+    }
+  }
+);
 
 const words = createSlice({
   name: "wordsReducer",
   initialState: {
     words: [],
-    status: null,
   },
   extraReducers: {
     [loadFB.pending.type]: (state) => {
@@ -71,9 +99,10 @@ const words = createSlice({
     },
     [updateFB.fulfilled.type]: (state, action) => {
       state.status = "success";
-      state.words = state.words.map((word) =>
-        word.id === action.payload.id ? action.payload : word
+      const index = state.words.findIndex(
+        (word) => word.id === action.payload.id
       );
+      state.words[index] = action.payload;
     },
     [updateFB.rejected.type]: (state) => {
       state.status = "failed";
@@ -83,7 +112,8 @@ const words = createSlice({
     },
     [deleteFB.fulfilled.type]: (state, action) => {
       state.status = "success";
-      state.words = state.words.filter((word) => word.id !== action.payload);
+      const index = state.words.findIndex((word) => word.id === action.payload);
+      state.words.splice(index, 1);
     },
     [deleteFB.rejected.type]: (state) => {
       state.status = "failed";
